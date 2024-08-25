@@ -49,7 +49,7 @@ END {
         }
 
         # Set Output File Name
-        Output_Script = Output_Path "rdbpmsqllist_detail.awk" ;
+        Output_Script = Output_Path "rdbpmsqllist_detail.sh" ;
 
     }
 
@@ -72,3 +72,38 @@ END {
 #######################################################################
 #   
 #######################################################################
+### Check "connection-d"
+$3 ~ /^connection-id/ {
+
+    # 
+    Script_Flag = 1.0 ;
+
+    # Next Line
+    next ;
+
+}
+
+### Set Value
+Script_Flag == 1.0 {
+
+    time            = $1 ;
+    connection_id   = $2 ;
+
+    Script_Flag = 2.0 ;
+
+}
+
+### Output Header
+Script_Flag == 2.0 {
+
+    if( Header_Script != "ON" ) {
+        print "#/usr/bin/bash" > Output_Script ;
+        Header_Script = "ON" ;
+    }
+
+    printf "rdbpmsqllist -t %s -c %s -w -d `pwd` >> rdbpmsqllist_detail.sql", time, connection_id >> Output_Script ;
+    Script_Flag = 1.0 ;
+
+    next ;
+
+}
